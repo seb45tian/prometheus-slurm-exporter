@@ -26,7 +26,7 @@ import (
 )
 
 func PartitionsData() []byte {
-    cmd := exec.Command("sinfo", "-h", "-o%R,%D,%C,%F")
+    cmd := exec.Command("sinfo", "-h", "-o%R,%D,%c,%T")
     // "%R,%D,%C,%F" == "partion,NNodes,NCPUsPerNode,State"
     stdout, err := cmd.StdoutPipe()
     if err != nil {
