@@ -172,16 +172,16 @@ func (pc *PartitionsCollector) Collect(ch chan<- prometheus.Metric) {
                         ch <- prometheus.MustNewConstMetric(pc.total, prometheus.GaugeValue, pm[p].total, p)
                 }
                 if pm[p].nodes_allocated > 0 {
-                        ch <- prometheus.MustNewConstMetric(pc.allocated, prometheus.GaugeValue, pm[p].nodes_allocated, p)
+                        ch <- prometheus.MustNewConstMetric(pc.nodes_allocated, prometheus.GaugeValue, pm[p].nodes_allocated, p)
                 }
                 if pm[p].nodes_idle > 0 {
-                        ch <- prometheus.MustNewConstMetric(pc.idle, prometheus.GaugeValue, pm[p].nodes_idle, p)
+                        ch <- prometheus.MustNewConstMetric(pc.nodes_idle, prometheus.GaugeValue, pm[p].nodes_idle, p)
                 }
                 if pm[p].nodes_other > 0 {
-                        ch <- prometheus.MustNewConstMetric(pc.other, prometheus.GaugeValue, pm[p].nodes_other, p)
+                        ch <- prometheus.MustNewConstMetric(pc.nodes_other, prometheus.GaugeValue, pm[p].nodes_other, p)
                 }
                 if pm[p].nodes_total > 0 {
-                        ch <- prometheus.MustNewConstMetric(pc.total, prometheus.GaugeValue, pm[p].nodes_total, p)
+                        ch <- prometheus.MustNewConstMetric(pc.nodes_total, prometheus.GaugeValue, pm[p].nodes_total, p)
                 }
         }
 }
