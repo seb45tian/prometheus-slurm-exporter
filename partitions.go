@@ -69,6 +69,7 @@ type PartitionMetrics struct {
 	nmaint float64
 	nmix   float64
 	nresv  float64
+	ntotal  float64
 	calloc float64
 	ccomp  float64
 	cdown  float64
@@ -78,6 +79,7 @@ type PartitionMetrics struct {
 	cmaint float64
 	cmix   float64
 	cresv  float64
+	ctotal  float64
 }
 
 func ParsePartitionsMetrics() map[string]*PartitionMetrics {
@@ -93,7 +95,7 @@ func ParsePartitionsMetrics() map[string]*PartitionMetrics {
             if !key {
                     partitions[partition] = &PartitionMetrics{0,0,0,0,0,0,0,0,
                                                               0,0,0,0,0,0,0,0,
-                                                              0,0,0}
+                                                              0,0,0,0,0}
             }
 
             node_count, _ := strconv.ParseFloat(strings.TrimSpace(split[1]), 64)
@@ -139,6 +141,8 @@ func ParsePartitionsMetrics() map[string]*PartitionMetrics {
                 partitions[partition].nresv += node_count
                 partitions[partition].cresv += cpu_count
             }
+            partition[partition].ntotal =+ node_count
+            partition[partition].ctotal =+ cpu_count
         }
     }
     // get list of pending jobs by partition name
@@ -166,6 +170,7 @@ type PartitionsCollector struct {
 	nmaint *prometheus.Desc
 	nmix   *prometheus.Desc
 	nresv  *prometheus.Desc
+	ntotal  *prometheus.Desc
 	calloc *prometheus.Desc
 	ccomp  *prometheus.Desc
 	cdown  *prometheus.Desc
@@ -175,6 +180,7 @@ type PartitionsCollector struct {
 	cmaint *prometheus.Desc
 	cmix   *prometheus.Desc
 	cresv  *prometheus.Desc
+	ctotal  *prometheus.Desc
 
 
 
@@ -193,6 +199,7 @@ func NewPartitionsCollector() *PartitionsCollector {
 		nmaint: prometheus.NewDesc("slurm_partition_nodes_maint", "Maint nodes for partition", labels, nil),
 		nmix:   prometheus.NewDesc("slurm_partition_nodes_mix", "Mix nodes for partition", labels, nil),
 		nresv:  prometheus.NewDesc("slurm_partition_nodes_resv", "Reserved nodes for partition", labels, nil),
+		ntotal:  prometheus.NewDesc("slurm_partition_nodes_total", "Total nodes for partition", labels, nil),
 		calloc: prometheus.NewDesc("slurm_partition_cpus_alloc", "Allocated CPUs for partition", labels, nil),
 		ccomp:  prometheus.NewDesc("slurm_partition_cpus_comp", "Completing CPUs for partition", labels, nil),
 		cdown:  prometheus.NewDesc("slurm_partition_cpus_down", "Down CPUs for partition", labels, nil),
@@ -202,6 +209,7 @@ func NewPartitionsCollector() *PartitionsCollector {
 		cmaint: prometheus.NewDesc("slurm_partition_cpus_maint", "Maint CPUs for partition", labels, nil),
 		cmix:   prometheus.NewDesc("slurm_partition_cpus_mix", "Mix CPUs for partition", labels, nil),
 		cresv:  prometheus.NewDesc("slurm_partition_cpus_resv", "Reserved CPUs for partition", labels, nil),
+		ctotal:  prometheus.NewDesc("slurm_partition_cpus_total", "Total CPUs for partition", labels, nil),
     }
 }
 
@@ -216,6 +224,7 @@ func (pc *PartitionsCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- pc.nmaint
 	ch <- pc.nmix
 	ch <- pc.nresv
+	ch <- pc.ntotal
 	ch <- pc.calloc
 	ch <- pc.ccomp
 	ch <- pc.cdown
@@ -225,6 +234,7 @@ func (pc *PartitionsCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- pc.cmaint
 	ch <- pc.cmix
 	ch <- pc.cresv
+	ch <- pc.ctotal
 }
 
 func (pc *PartitionsCollector) Collect(ch chan<- prometheus.Metric) {
@@ -240,6 +250,7 @@ func (pc *PartitionsCollector) Collect(ch chan<- prometheus.Metric) {
         ch <- prometheus.MustNewConstMetric(pc.nmaint, prometheus.GaugeValue, pm[p].nmaint, p)
         ch <- prometheus.MustNewConstMetric(pc.nmix,   prometheus.GaugeValue, pm[p].nmix, p)
         ch <- prometheus.MustNewConstMetric(pc.nresv,  prometheus.GaugeValue, pm[p].nresv, p)
+        ch <- prometheus.MustNewConstMetric(pc.ntotal,  prometheus.GaugeValue, pm[p].ntotal, p)
         ch <- prometheus.MustNewConstMetric(pc.calloc, prometheus.GaugeValue, pm[p].calloc, p)
         ch <- prometheus.MustNewConstMetric(pc.ccomp,  prometheus.GaugeValue, pm[p].ccomp, p)
         ch <- prometheus.MustNewConstMetric(pc.cdown,  prometheus.GaugeValue, pm[p].cdown, p)
@@ -249,5 +260,6 @@ func (pc *PartitionsCollector) Collect(ch chan<- prometheus.Metric) {
         ch <- prometheus.MustNewConstMetric(pc.cmaint, prometheus.GaugeValue, pm[p].cmaint, p)
         ch <- prometheus.MustNewConstMetric(pc.cmix,   prometheus.GaugeValue, pm[p].cmix, p)
         ch <- prometheus.MustNewConstMetric(pc.cresv,  prometheus.GaugeValue, pm[p].cresv, p)
+        ch <- prometheus.MustNewConstMetric(pc.ctotal,  prometheus.GaugeValue, pm[p].ctotal, p)
     }
 }
