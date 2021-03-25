@@ -93,7 +93,7 @@ func ParsePartitionsMetrics() map[string]*PartitionMetrics {
             if !key {
                     partitions[partition] = &PartitionMetrics{0,0,0,0,0,0,0,0,
                                                               0,0,0,0,0,0,0,0,
-                                                              0,0,0,0,0}
+                                                              0,0,0}
             }
 
             node_count, _ := strconv.ParseFloat(strings.TrimSpace(split[1]), 64)
