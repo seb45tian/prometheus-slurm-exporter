@@ -141,8 +141,8 @@ func ParsePartitionsMetrics() map[string]*PartitionMetrics {
                 partitions[partition].nresv += node_count
                 partitions[partition].cresv += cpu_count
             }
-            partition[partition].ntotal =+ node_count
-            partition[partition].ctotal =+ cpu_count
+            partitions[partition].ntotal =+ node_count
+            partitions[partition].ctotal =+ cpu_count
         }
     }
     // get list of pending jobs by partition name
