@@ -24,6 +24,13 @@ Prometheus collector and exporter for metrics extracted from the [Slurm](https:/
 - Information extracted from the SLURM [**sinfo**](https://slurm.schedmd.com/sinfo.html) and [**sacct**](https://slurm.schedmd.com/sacct.html) command.
 - [Slurm GRES scheduling](https://slurm.schedmd.com/gres.html)
 
+**NOTE**: since version **0.19**, GPU accounting has to be **explicitly** enabled adding the _-gpus-acct_ option to the command line otherwise it will not be activated.
+
+Be aware that:
+
+* According to issue #38, users reported that newer version of Slurm provides slightly different output and thus GPUs accounting may not work properly.
+* Users who do not have GPUs and/or do not have accounting activated may want to keep GPUs accounting **off** (see issue #45).
+
 ### State of the Nodes
 
 * **Allocated**: nodes which has been allocated to one or more jobs.
@@ -41,10 +48,20 @@ Prometheus collector and exporter for metrics extracted from the [Slurm](https:/
 
 - Information extracted from the SLURM [**sinfo**](https://slurm.schedmd.com/sinfo.html) command.
 
+#### Additional info about node usage
+
+Since version **0.18**, the following information are also extracted and exported for **every** node known by Slurm:
+
+* CPUs: how many are _allocated_, _idle_, _other_ and in _total_.
+* Memory: _allocated_ and in _total_.
+* Labels: hostname and its Slurm status (e.g. _idle_, _mix_, _allocated_, _draining_, etc.).
+
+See the related [test data](https://github.com/vpenso/prometheus-slurm-exporter/blob/master/test_data/sinfo_mem.txt) to check the format of the information extracted from Slurm.
+
 ### Status of the Jobs
 
 * **PENDING**: Jobs awaiting for resource allocation.
-* **PENDING_DEPENDENCY**: Jobs awaiting because of a unexecuted job dependency.
+* **PENDING_DEPENDENCY**: Jobs awaiting because of an unexecuted job dependency.
 * **RUNNING**: Jobs currently allocated.
 * **SUSPENDED**: Job has an allocation but execution has been suspended and CPUs have been released for other jobs.
 * **CANCELLED**: Jobs which were explicitly cancelled by the user or system administrator.
@@ -131,7 +148,7 @@ scrape_configs:
 * **scrape_interval**: a 30 seconds interval will avoid possible 'overloading' on the SLURM master due to frequent calls of sdiag/squeue/sinfo commands through the exporter.
 * **scrape_timeout**: on a busy SLURM master a too short scraping timeout will abort the communication from the Prometheus server toward the exporter, thus generating a ``context_deadline_exceeded`` error.
 
-The previous configuration file can be immediately used with a fresh installation of Promethues. At the same time, we highly recommend to include at least the ``global`` section into the configuration. Official documentation about __configuring Prometheus__ is [available here](https://prometheus.io/docs/prometheus/latest/configuration/configuration/).
+The previous configuration file can be immediately used with a fresh installation of Prometheus. At the same time, we highly recommend to include at least the ``global`` section into the configuration. Official documentation about __configuring Prometheus__ is [available here](https://prometheus.io/docs/prometheus/latest/configuration/configuration/).
 
 **NOTE**: the Prometheus server is using __YAML__ as format for its configuration file, thus **indentation** is really important. Before reloading the Prometheus server it would be better to check the syntax:
 
