@@ -58,8 +58,25 @@ func PartitionsPendingJobsData() []byte {
     return out
 }
 
+func PartitionsRunningJobsData() []byte {
+    cmd := exec.Command("squeue","-a","-r","-h","-o%P","--states=RUNNING")
+    stdout, err := cmd.StdoutPipe()
+    if err != nil {
+            log.Fatal(err)
+    }
+    if err := cmd.Start(); err != nil {
+            log.Fatal(err)
+    }
+    out, _ := ioutil.ReadAll(stdout)
+    if err := cmd.Wait(); err != nil {
+            log.Fatal(err)
+    }
+    return out
+}
+
 type PartitionMetrics struct {
     pending float64
+    running float64
 	nalloc float64
 	ncomp  float64
 	ndown  float64
@@ -69,7 +86,7 @@ type PartitionMetrics struct {
 	nmaint float64
 	nmix   float64
 	nresv  float64
-	ntotal  float64
+	ntotal float64
 	calloc float64
 	ccomp  float64
 	cdown  float64
@@ -79,7 +96,7 @@ type PartitionMetrics struct {
 	cmaint float64
 	cmix   float64
 	cresv  float64
-	ctotal  float64
+	ctotal float64
 }
 
 func ParsePartitionsMetrics() map[string]*PartitionMetrics {
@@ -95,7 +112,7 @@ func ParsePartitionsMetrics() map[string]*PartitionMetrics {
             if !key {
                     partitions[partition] = &PartitionMetrics{0,0,0,0,0,0,0,0,
                                                               0,0,0,0,0,0,0,0,
-                                                              0,0,0,0,0}
+                                                              0,0,0,0,0,0}
             }
 
             node_count, _ := strconv.ParseFloat(strings.TrimSpace(split[1]), 64)
@@ -146,13 +163,26 @@ func ParsePartitionsMetrics() map[string]*PartitionMetrics {
         }
     }
     // get list of pending jobs by partition name
-    list := strings.Split(string(PartitionsPendingJobsData()),"\n")
-    for _,partition := range list {
-    // accumulate the number of pending jobs
-    _,key := partitions[partition]
-    if key {
-        partitions[partition].pending += 1
+    pending := strings.Split(string(PartitionsPendingJobsData()),"\n")
+    for _,partition := range pending {
+        names := strings.Split(string(partition, ",")
+        // can be multiple partitions per job 
+        for _,name := range names {
+            _,key := partitions[name]
+            if key {
+                // accumulate the number of pending jobs
+                partitions[name].pending += 1
             }
+        }
+    }
+    // get list of running jobs by partition name
+    running := strings.Split(string(PartitionsPendingJobsData()),"\n")
+    for _,name := range running {
+        _,key := partitions[name]
+        if key {
+            // accumulate the number of pending jobs
+            partitions[name].running += 1
+        }
     }
 
 
@@ -161,6 +191,7 @@ func ParsePartitionsMetrics() map[string]*PartitionMetrics {
 
 type PartitionsCollector struct {
     pending *prometheus.Desc
+    running *prometheus.Desc
 	nalloc *prometheus.Desc
 	ncomp  *prometheus.Desc
 	ndown  *prometheus.Desc
@@ -190,6 +221,7 @@ func NewPartitionsCollector() *PartitionsCollector {
     labels := []string{"partition"}
     return &PartitionsCollector{
         pending: prometheus.NewDesc("slurm_partition_jobs_pending", "Pending jobs for partition", labels,nil),
+        running: prometheus.NewDesc("slurm_partition_jobs_running", "Running jobs for partition", labels,nil),
 		nalloc: prometheus.NewDesc("slurm_partition_nodes_alloc", "Allocated nodes for partition", labels, nil),
 		ncomp:  prometheus.NewDesc("slurm_partition_nodes_comp", "Completing nodes for partition", labels, nil),
 		ndown:  prometheus.NewDesc("slurm_partition_nodes_down", "Down nodes for partition", labels, nil),
@@ -215,6 +247,7 @@ func NewPartitionsCollector() *PartitionsCollector {
 
 func (pc *PartitionsCollector) Describe(ch chan<- *prometheus.Desc) {
     ch <- pc.pending
+    ch <- pc.running
 	ch <- pc.nalloc
 	ch <- pc.ncomp
 	ch <- pc.ndown
@@ -241,6 +274,7 @@ func (pc *PartitionsCollector) Collect(ch chan<- prometheus.Metric) {
     pm := ParsePartitionsMetrics()
     for p := range pm {
         ch <- prometheus.MustNewConstMetric(pc.pending, prometheus.GaugeValue, pm[p].pending, p)
+        ch <- prometheus.MustNewConstMetric(pc.running, prometheus.GaugeValue, pm[p].running, p)
         ch <- prometheus.MustNewConstMetric(pc.nalloc, prometheus.GaugeValue, pm[p].nalloc, p)
         ch <- prometheus.MustNewConstMetric(pc.ncomp,  prometheus.GaugeValue, pm[p].ncomp, p)
         ch <- prometheus.MustNewConstMetric(pc.ndown,  prometheus.GaugeValue, pm[p].ndown, p)
