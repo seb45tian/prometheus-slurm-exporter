@@ -176,7 +176,7 @@ func ParsePartitionsMetrics() map[string]*PartitionMetrics {
         }
     }
     // get list of running jobs by partition name
-    running := strings.Split(string(PartitionsPendingJobsData()),"\n")
+    running := strings.Split(string(PartitionsRunningJobsData()),"\n")
     for _,name := range running {
         _,key := partitions[name]
         if key {
