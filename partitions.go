@@ -165,7 +165,7 @@ func ParsePartitionsMetrics() map[string]*PartitionMetrics {
     // get list of pending jobs by partition name
     pending := strings.Split(string(PartitionsPendingJobsData()),"\n")
     for _,partition := range pending {
-        names := strings.Split(string(partition, ",")
+        names := strings.Split(string(partition, ","))
         // can be multiple partitions per job 
         for _,name := range names {
             _,key := partitions[name]
